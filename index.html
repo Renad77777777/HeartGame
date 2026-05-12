@@ -1,0 +1,1711 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>رحلة كرية الدم الحمراء</title>
+  <meta name="color-scheme" content="light">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: Tahoma, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+      color: #f8fafc;
+      background:
+        radial-gradient(circle at top, #1d4ed8 0%, #0f172a 35%, #020617 100%);
+    }
+    button {
+      font: inherit;
+    }
+    .app {
+      width: min(1220px, 96vw);
+      margin: 0 auto;
+      padding: 18px 0 24px;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .card {
+      background: rgba(15, 23, 42, .82);
+      border: 1px solid rgba(148, 163, 184, .26);
+      border-radius: 18px;
+      box-shadow: 0 18px 50px rgba(2, 6, 23, .35);
+      backdrop-filter: blur(10px);
+    }
+    .header {
+      padding: 18px 20px 6px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+    }
+    .title {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .subtitle {
+      margin: 8px 0 0;
+      color: #cbd5e1;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+    .hud {
+      padding: 0 20px 18px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      background: rgba(15, 23, 42, .85);
+      border: 1px solid rgba(148, 163, 184, .18);
+      border-radius: 14px;
+      padding: 12px;
+      min-height: 82px;
+    }
+    .stat-label {
+      color: #94a3b8;
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+    .stat-value {
+      font-weight: 900;
+      font-size: 18px;
+    }
+    .meter {
+      margin-top: 8px;
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(148, 163, 184, .22);
+      border: 1px solid rgba(148, 163, 184, .2);
+    }
+    .meter > span {
+      display: block;
+      height: 100%;
+      width: 50%;
+      border-radius: inherit;
+      transition: width .18s linear, background .18s linear;
+      background: linear-gradient(90deg, #38bdf8, #ef4444);
+    }
+    .play-grid {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .stage-card {
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stage-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .stage-name {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 900;
+    }
+    .stage-mission {
+      margin: 6px 0 0;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+    .tag {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, .18);
+      color: #bfdbfe;
+      border: 1px solid rgba(96, 165, 250, .28);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .board-wrap {
+      position: relative;
+      aspect-ratio: 900 / 520;
+      min-height: 280px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, .22);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(56, 189, 248, .15) 0%, transparent 24%),
+        radial-gradient(circle at 80% 18%, rgba(244, 63, 94, .14) 0%, transparent 24%),
+        linear-gradient(180deg, rgba(30, 41, 59, .96), rgba(15, 23, 42, .98));
+      touch-action: none;
+    }
+    .board-wrap.wrong-way {
+      animation: wrongWayFlash .55s ease;
+    }
+    .game-layer {
+      position: absolute;
+      width: 900px;
+      height: 520px;
+      inset: 0 auto auto 0;
+      transform-origin: top left;
+    }
+    .board {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+    .grid-lines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+    .track, .zone, .exit, .gate, .obstacle, .collectible, .target, .decor {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 800;
+      user-select: none;
+    }
+    .track {
+      background:
+        linear-gradient(180deg, rgba(30, 64, 175, .92), rgba(37, 99, 235, .74));
+      border: 3px solid rgba(191, 219, 254, .32);
+      color: rgba(255, 255, 255, .88);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, .12),
+        0 0 18px rgba(37, 99, 235, .26);
+      letter-spacing: .01em;
+    }
+    .track.red {
+      background:
+        linear-gradient(180deg, rgba(220, 38, 38, .9), rgba(239, 68, 68, .72));
+      border-color: rgba(254, 202, 202, .34);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, .1),
+        0 0 18px rgba(239, 68, 68, .24);
+    }
+    .track.lung {
+      background:
+        linear-gradient(180deg, rgba(34, 197, 94, .42), rgba(59, 130, 246, .26));
+      border-color: rgba(187, 247, 208, .38);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, .12),
+        0 0 18px rgba(74, 222, 128, .18);
+    }
+    .zone {
+      border-radius: 999px;
+      border: 2px dashed rgba(255, 255, 255, .35);
+      color: #e2e8f0;
+      background: rgba(15, 23, 42, .14);
+      padding: 6px;
+    }
+    .zone.visited {
+      background: rgba(34, 197, 94, .22);
+      border-color: rgba(134, 239, 172, .9);
+      color: #dcfce7;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, .16);
+    }
+    .exit {
+      border-radius: 16px;
+      background: rgba(250, 204, 21, .22);
+      border: 2px solid rgba(250, 204, 21, .65);
+      color: #fde68a;
+      padding: 8px;
+    }
+    .exit.ready {
+      box-shadow: 0 0 20px rgba(250, 204, 21, .38);
+      animation: pulseGlow 1s infinite;
+    }
+    .gate {
+      background: linear-gradient(180deg, rgba(249, 115, 22, .95), rgba(234, 88, 12, .78));
+      border: 2px solid rgba(255, 237, 213, .42);
+      color: #fff7ed;
+      border-radius: 999px;
+      transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease;
+      z-index: 3;
+    }
+    .gate.open {
+      opacity: .3;
+      box-shadow: 0 0 18px rgba(74, 222, 128, .42);
+      background: linear-gradient(180deg, rgba(74, 222, 128, .85), rgba(22, 163, 74, .68));
+    }
+    .gate-label {
+      padding: 0 8px;
+      line-height: 1.2;
+      text-shadow: 0 1px 2px rgba(0,0,0,.45);
+    }
+    .obstacle {
+      border-radius: 999px;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.15;
+      z-index: 2;
+    }
+    .obstacle.cholesterol {
+      background: linear-gradient(180deg, #facc15, #f59e0b);
+      border: 2px solid rgba(254, 243, 199, .55);
+      color: #422006;
+    }
+    .obstacle.germ, .obstacle.co2 {
+      background: linear-gradient(180deg, #14b8a6, #0f766e);
+      border: 2px solid rgba(153, 246, 228, .45);
+    }
+    .obstacle.co2 {
+      background: linear-gradient(180deg, #64748b, #334155);
+      border-color: rgba(226, 232, 240, .35);
+    }
+    .collectible {
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #ffffff 0%, #bae6fd 18%, #60a5fa 48%, #2563eb 100%);
+      border: 2px solid rgba(219, 234, 254, .75);
+      color: #eff6ff;
+      box-shadow: 0 0 14px rgba(96, 165, 250, .55);
+      z-index: 2;
+    }
+    .target {
+      border-radius: 22px;
+      background: rgba(15, 23, 42, .28);
+      border: 2px solid rgba(203, 213, 225, .35);
+      color: #e2e8f0;
+      padding: 8px;
+    }
+    .target.active {
+      background: rgba(239, 68, 68, .22);
+      border-color: rgba(252, 165, 165, .95);
+      color: #fee2e2;
+      box-shadow: 0 0 22px rgba(248, 113, 113, .28);
+    }
+    .decor {
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .08);
+      border: 1px dashed rgba(148, 163, 184, .18);
+      color: rgba(226, 232, 240, .6);
+      font-weight: 700;
+    }
+    .player {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      margin-left: -14px;
+      margin-top: -14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fda4af 0%, #ef4444 58%, #b91c1c 100%);
+      border: 3px solid rgba(255, 255, 255, .78);
+      box-shadow: 0 0 18px rgba(248, 113, 113, .6);
+      z-index: 6;
+      transition: background .25s ease, box-shadow .25s ease, transform .12s linear;
+    }
+    .player.blue {
+      background: radial-gradient(circle at 35% 35%, #bfdbfe 0%, #3b82f6 55%, #1d4ed8 100%);
+      box-shadow: 0 0 18px rgba(96, 165, 250, .52);
+    }
+    .player.flash-oxygen {
+      animation: oxygenFlash .75s ease;
+    }
+    .beat-ring {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 0%, transparent 45%, rgba(248, 113, 113, .12) 70%, transparent 78%);
+      opacity: 0;
+    }
+    .beat-ring.active {
+      animation: beatFlash .28s ease-out;
+    }
+    .fog {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 45%, rgba(2, 6, 23, .7) 100%);
+      opacity: .06;
+      transition: opacity .2s ease;
+      z-index: 5;
+    }
+    .message-bar {
+      margin-top: 12px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .message {
+      color: #e2e8f0;
+      font-weight: 700;
+    }
+    .message.warn { color: #fde68a; }
+    .message.ok { color: #bbf7d0; }
+    .controls-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      border: 0;
+      cursor: pointer;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      color: #f8fafc;
+      background: linear-gradient(180deg, #2563eb, #1d4ed8);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+    }
+    .btn.secondary {
+      background: rgba(30, 41, 59, .96);
+      border: 1px solid rgba(148, 163, 184, .2);
+    }
+    .btn.alert {
+      background: linear-gradient(180deg, #f97316, #ea580c);
+    }
+    .btn.active {
+      outline: 2px solid rgba(252, 211, 77, .55);
+      outline-offset: 1px;
+    }
+    .side {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+    .panel-title {
+      margin: 0 0 8px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .panel-text {
+      margin: 0;
+      color: #cbd5e1;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+    .facts, .checklist, .legend {
+      display: grid;
+      gap: 8px;
+    }
+    .fact, .check, .legend-item {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, .68);
+      border: 1px solid rgba(148, 163, 184, .16);
+      color: #e2e8f0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .legend-chip {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      vertical-align: middle;
+      margin-left: 8px;
+    }
+    .legend-chip.blue { background: #3b82f6; }
+    .legend-chip.red { background: #ef4444; }
+    .legend-chip.gold { background: #facc15; }
+    .legend-chip.green { background: #14b8a6; }
+    .pressure-controls, .mobile-controls {
+      display: grid;
+      gap: 10px;
+    }
+    .pressure-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pressure-meter {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .pressure-step {
+      text-align: center;
+      padding: 10px 8px;
+      border-radius: 12px;
+      background: rgba(30, 41, 59, .9);
+      border: 1px solid rgba(148, 163, 184, .18);
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .pressure-step.active {
+      border-color: rgba(125, 211, 252, .75);
+      color: #e0f2fe;
+      background: rgba(14, 116, 144, .55);
+    }
+    .mobile-controls {
+      margin-top: 12px;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      display: grid;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, .55);
+      border: 1px solid rgba(148, 163, 184, .16);
+    }
+    .touch-text {
+      color: #cbd5e1;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .mobile-controls .btn {
+      white-space: nowrap;
+    }
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(2, 6, 23, .72);
+      padding: 20px;
+      z-index: 50;
+    }
+    .overlay.show {
+      display: grid;
+    }
+    .modal {
+      width: min(700px, 96vw);
+      padding: 22px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, .98), rgba(15, 23, 42, .92));
+      border: 1px solid rgba(148, 163, 184, .24);
+      box-shadow: 0 20px 60px rgba(2, 6, 23, .55);
+      color: #f8fafc;
+    }
+    .modal h2 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+    .modal-text {
+      margin: 0;
+      line-height: 1.9;
+      color: #cbd5e1;
+    }
+    .modal-footer {
+      margin-top: 14px;
+      color: #fde68a;
+      font-weight: 900;
+      letter-spacing: .02em;
+    }
+    .benefits-list {
+      margin: 0;
+      padding-right: 18px;
+      color: #cbd5e1;
+      line-height: 1.9;
+    }
+    .benefits-list li + li {
+      margin-top: 8px;
+    }
+    .options {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .option {
+      width: 100%;
+      text-align: right;
+      background: rgba(30, 41, 59, .9);
+      border: 1px solid rgba(148, 163, 184, .2);
+      border-radius: 14px;
+      padding: 14px;
+      color: #f8fafc;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .option:hover {
+      border-color: rgba(96, 165, 250, .55);
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .heartbeat {
+      color: #fda4af;
+      font-weight: 900;
+      letter-spacing: .1em;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    @keyframes beatFlash {
+      0% { opacity: 0; transform: scale(1); }
+      20% { opacity: .8; transform: scale(1.02); }
+      100% { opacity: 0; transform: scale(1.08); }
+    }
+    @keyframes oxygenFlash {
+      0% { transform: scale(1); filter: brightness(1); }
+      20% { transform: scale(1.18); filter: brightness(1.6); }
+      55% { transform: scale(.96); filter: brightness(1.1); }
+      100% { transform: scale(1); filter: brightness(1); }
+    }
+    @keyframes wrongWayFlash {
+      0% { box-shadow: inset 0 0 0 rgba(239, 68, 68, 0), 0 0 0 rgba(239, 68, 68, 0); }
+      25% { box-shadow: inset 0 0 0 999px rgba(239, 68, 68, .16), 0 0 0 2px rgba(248, 113, 113, .75); }
+      100% { box-shadow: inset 0 0 0 rgba(239, 68, 68, 0), 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    @media (max-width: 980px) {
+      .hero,
+      .play-grid {
+        grid-template-columns: 1fr;
+      }
+      .hud {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 640px) {
+      .title {
+        font-size: 23px;
+      }
+      .stage-name {
+        font-size: 19px;
+      }
+      .hud {
+        grid-template-columns: 1fr;
+      }
+      .header, .hud, .stage-card, .side {
+        padding-right: 14px;
+        padding-left: 14px;
+      }
+      .mobile-controls {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="card">
+        <div class="header">
+          <div>
+            <h1 class="title">رحلة كرية الدم الحمراء</h1>
+            <p class="subtitle">
+              لعبة تعليمية تشرح مسار الدم داخل القلب والرئتين والجسم. تحكّم في الكرية، اضبط النبض والضغط،
+              واعبر الصمامات في الوقت الصحيح لتوصيل الأكسجين قبل أن ينخفض مستواه.
+            </p>
+          </div>
+          <div class="tag heartbeat" id="heartBeatText">LUB-DUB</div>
+        </div>
+        <div class="hud">
+          <div class="stat">
+            <div class="stat-label">المرحلة الحالية</div>
+            <div class="stat-value" id="levelValue">1 / 4</div>
+            <div class="panel-text" id="levelPlace">الأذين والبطين الأيمن</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">شريط الأكسجين</div>
+            <div class="stat-value" id="oxygenValue">70%</div>
+            <div class="meter"><span id="oxygenBar"></span></div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">النبض</div>
+            <div class="stat-value"><span id="pulseValue">76</span> bpm</div>
+            <div class="panel-text" id="adrenalineText">وضع طبيعي</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">النقاط</div>
+            <div class="stat-value" id="scoreValue">0</div>
+            <div class="panel-text" id="pressureHint">الضغط المطلوب: متوازن</div>
+          </div>
+        </div>
+      </div>
+      <aside class="card side">
+        <section>
+          <h2 class="panel-title">تعليمات اللعب</h2>
+          <div class="facts">
+            <div class="fact">حرّك المؤشر أو اسحب بإصبعك داخل اللوحة، والكرية ستلحق به بسلاسة.</div>
+            <div class="fact">اضغط زر الأدرينالين لزيادة النبض. الحركة تصبح أسرع لكن التحكم يحتاج دقة.</div>
+            <div class="fact">الصمامات تفتح تلقائيًا عند اقتراب الكرية، ويصدر نبض خفيف عند العبور.</div>
+          </div>
+        </section>
+        <section class="pressure-controls">
+          <h2 class="panel-title">لوحة الضغط</h2>
+          <div class="pressure-buttons">
+            <button class="btn secondary" id="lowerPressureBtn">خفض الضغط</button>
+            <button class="btn secondary" id="raisePressureBtn">رفع الضغط</button>
+            <button class="btn alert" id="adrenalineBtn">أدرينالين</button>
+          </div>
+          <div class="pressure-meter">
+            <div class="pressure-step" data-pressure="-1">منخفض</div>
+            <div class="pressure-step" data-pressure="0">متوازن</div>
+            <div class="pressure-step" data-pressure="1">مرتفع</div>
+          </div>
+          <p class="panel-text" id="pressureExplain">
+            اجعل الضغط مناسبًا للمرحلة. الضغط الزائد يسرّع الحركة، والمنخفض يبطّئها.
+          </p>
+        </section>
+        <section>
+          <h2 class="panel-title">مؤشرات تعليمية</h2>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-chip blue"></span> دم غير مؤكسج في الجانب الأيمن قبل الرئتين.</div>
+            <div class="legend-item"><span class="legend-chip red"></span> دم مؤكسج في الجانب الأيسر وبعد الرئتين.</div>
+            <div class="legend-item"><span class="legend-chip gold"></span> الصمامات تعمل كبوابات زمنية تمنع رجوع الدم.</div>
+            <div class="legend-item"><span class="legend-chip green"></span> الجراثيم وخلايا ثاني أكسيد الكربون عوائق يجب تفاديها.</div>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="play-grid">
+      <div class="card stage-card">
+        <div class="stage-top">
+          <div>
+            <h2 class="stage-name" id="stageName">المستوى 1: الأذين والبطين الأيمن</h2>
+            <p class="stage-mission" id="stageMission">تحرّك نحو الرئتين عبر الشريان الرئوي بعد عبور الصمام الثلاثي الشرفات.</p>
+          </div>
+          <div class="tag" id="goalTag">هدفك: الوصول للرئتين</div>
+        </div>
+        <div class="board-wrap" id="boardWrap" aria-label="ساحة لعبة رحلة كرية الدم الحمراء">
+          <div class="game-layer" id="gameLayer">
+            <div class="board" id="board"></div>
+            <div class="grid-lines"></div>
+            <div class="beat-ring" id="beatRing"></div>
+            <div class="player blue" id="player" aria-label="كرية الدم الحمراء"></div>
+            <div class="fog" id="fog"></div>
+          </div>
+        </div>
+        <div class="message-bar">
+          <div class="message" id="message">ابدأ الرحلة ثم ادخل الأذين الأيمن أولاً.</div>
+          <div class="controls-row">
+            <button class="btn" id="startBtn">ابدأ من المستوى الأول</button>
+            <button class="btn secondary" id="restartBtn">إعادة من البداية</button>
+          </div>
+        </div>
+        <div class="mobile-controls">
+          <div class="touch-text">حرّك الماوس أو المس اللوحة مباشرة، والكرية ستتبع اتجاهك تلقائيًا.</div>
+          <button class="btn alert" id="mobileAdrenalineBtn">تبديل الأدرينالين</button>
+        </div>
+      </div>
+
+      <aside class="card side">
+        <section>
+          <h2 class="panel-title">قائمة المهمة</h2>
+          <div class="checklist" id="checklist"></div>
+        </section>
+        <section>
+          <h2 class="panel-title">المعلومة التعليمية</h2>
+          <p class="panel-text" id="teachingText">
+            في هذا المستوى يكون الدم غير مؤكسج، ويجب أن يذهب للرئتين لالتقاط الأكسجين والتخلص من ثاني أكسيد الكربون.
+          </p>
+        </section>
+        <section>
+          <h2 class="panel-title">حالة المرحلة</h2>
+          <div class="facts">
+            <div class="fact" id="statusText">لم تبدأ بعد.</div>
+            <div class="fact" id="progressText">الإنجاز: 0%</div>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </div>
+
+  <div class="overlay show" id="overlay">
+    <div class="modal">
+      <h2 id="overlayTitle">المستوى الأول: شاشة البداية</h2>
+      <div class="modal-text" id="overlayText">
+        ابدئي الرحلة من الجانب الأيمن للقلب، ثم افتحي المراحل التالية بالترتيب حتى تصلي إلى أنحاء الجسم.
+        لن يظهر المستوى التالي إلا بعد إنهاء التحدي السابق بنجاح.
+      </div>
+      <div class="modal-footer" id="overlayFooter">عمل طالبات 2/2</div>
+      <div class="options" id="overlayOptions"></div>
+      <div class="modal-actions" id="overlayActions">
+        <button class="btn" id="overlayStartBtn">ابدأ المستوى الأول</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BOARD_W = 900;
+    const BOARD_H = 520;
+    const PLAYER_R = 14;
+
+    const stageDefinitions = [
+      {
+        id: "right-heart",
+        title: "المستوى 1: الأذين والبطين الأيمن",
+        place: "الأذين والبطين الأيمن",
+        mission: "ادخل الأذين الأيمن ثم البطين الأيمن واعبر إلى الرئتين عبر الشريان الرئوي.",
+        objectiveTag: "هدفك: الوصول للرئتين",
+        teaching: "في الجانب الأيمن من القلب يكون الدم غير مؤكسج، ويتجه بعد ذلك إلى الرئتين عبر الشريان الرئوي.",
+        pressureTarget: 0,
+        pressureHint: "الضغط المطلوب: متوازن",
+        drain: 4.4,
+        start: { x: 785, y: 430 },
+        playerMode: "blue",
+        checks: [
+          { id: "ra", label: "ادخل الأذين الأيمن" },
+          { id: "rv", label: "انتقل إلى البطين الأيمن" },
+          { id: "exit", label: "اخرج إلى الشريان الرئوي" }
+        ],
+        quiz: {
+          title: "سؤال المرحلة 1",
+          text: "أي وعاء ينقل الدم غير المؤكسج من القلب إلى الرئتين؟",
+          options: [
+            { text: "الشريان الرئوي", correct: true },
+            { text: "الأوردة الرئوية", correct: false },
+            { text: "الشريان الأورطي", correct: false }
+          ]
+        },
+        build() {
+          return {
+            tracks: [
+              { x: 730, y: 365, w: 125, h: 110, r: 36, label: "وريد أجوف", className: "" },
+              { x: 600, y: 205, w: 190, h: 150, r: 999, label: "أذين أيمن", className: "" },
+              { x: 470, y: 305, w: 230, h: 165, r: 999, label: "بطين أيمن", className: "" },
+              { x: 320, y: 165, w: 230, h: 70, r: 28, label: "شريان رئوي", className: "" },
+              { x: 250, y: 55, w: 145, h: 115, r: 999, label: "إلى الرئتين", className: "lung" }
+            ],
+            zones: [
+              { id: "ra", x: 615, y: 220, w: 160, h: 120, r: 999, label: "أذين أيمن" },
+              { id: "rv", x: 500, y: 330, w: 170, h: 120, r: 999, label: "بطين أيمن" }
+            ],
+            gates: [
+              { id: "tri", x: 610, y: 330, w: 18, h: 80, offset: 0, label: "ثلاثي الشرفات" },
+              { id: "pulmonary", x: 505, y: 205, w: 95, h: 18, offset: 260, label: "الصمام الرئوي" }
+            ],
+            exits: [
+              { id: "exit", x: 258, y: 70, w: 128, h: 90, label: "الرئتان", requires: ["ra", "rv"] }
+            ],
+            obstacles: [
+              { id: "g1", type: "germ", x: 685, y: 250, w: 42, h: 42, vx: 48, vy: 0, minX: 635, maxX: 750, minY: 250, maxY: 250, label: "جرثومة" }
+            ],
+            targets: [],
+            collectibles: [],
+            decor: [
+              { x: 96, y: 35, w: 100, h: 120, r: 999, label: "رئة", className: "decor" },
+              { x: 405, y: 45, w: 140, h: 88, r: 999, label: "مجرى الدم", className: "decor" }
+            ]
+          };
+        }
+      },
+      {
+        id: "lungs",
+        title: "المستوى 2: الرئتان",
+        place: "الرئتان",
+        mission: "اجمع 6 كرات أكسجين وتجنب سحب ثاني أكسيد الكربون ثم عد إلى القلب عبر الأوردة الرئوية.",
+        objectiveTag: "هدفك: التقط الأكسجين",
+        teaching: "في الرئتين يحدث تبادل الغازات؛ تلتقط كرية الدم الأكسجين وتتخلص من ثاني أكسيد الكربون.",
+        pressureTarget: 0,
+        pressureHint: "الضغط المطلوب: متوازن",
+        drain: 2.2,
+        start: { x: 112, y: 260 },
+        playerMode: "blue",
+        checks: [
+          { id: "oxy", label: "اجمع 6 كرات أكسجين" },
+          { id: "exit", label: "عد عبر الأوردة الرئوية" }
+        ],
+        quiz: {
+          title: "سؤال المرحلة 2",
+          text: "ماذا يحدث في الحويصلات الهوائية داخل الرئتين؟",
+          options: [
+            { text: "يتم تبادل الأكسجين وثاني أكسيد الكربون", correct: true },
+            { text: "يتم تصنيع خلايا الدم البيضاء", correct: false },
+            { text: "يتم ضخ الدم إلى الجسم مباشرة", correct: false }
+          ]
+        },
+        build() {
+          return {
+            tracks: [
+              { x: 60, y: 195, w: 195, h: 140, r: 999, label: "هواء داخل الرئة", className: "lung" },
+              { x: 260, y: 100, w: 400, h: 320, r: 999, label: "حويصلات هوائية", className: "lung" },
+              { x: 670, y: 205, w: 155, h: 105, r: 999, label: "وريد رئوي", className: "red" }
+            ],
+            zones: [],
+            gates: [],
+            exits: [
+              { id: "exit", x: 690, y: 215, w: 125, h: 85, label: "عودة للقلب", requiresCollectibles: 6 }
+            ],
+            obstacles: [
+              { id: "co2a", type: "co2", x: 360, y: 175, w: 52, h: 52, vx: 42, vy: 18, minX: 295, maxX: 585, minY: 130, maxY: 350, label: "CO2" },
+              { id: "co2b", type: "co2", x: 520, y: 300, w: 48, h: 48, vx: -55, vy: 22, minX: 320, maxX: 610, minY: 140, maxY: 360, label: "CO2" }
+            ],
+            targets: [],
+            collectibles: [
+              { id: "o1", x: 315, y: 162, w: 28, h: 28, label: "O2" },
+              { id: "o2", x: 430, y: 142, w: 28, h: 28, label: "O2" },
+              { id: "o3", x: 540, y: 192, w: 28, h: 28, label: "O2" },
+              { id: "o4", x: 600, y: 305, w: 28, h: 28, label: "O2" },
+              { id: "o5", x: 390, y: 332, w: 28, h: 28, label: "O2" },
+              { id: "o6", x: 505, y: 250, w: 28, h: 28, label: "O2" }
+            ],
+            decor: [
+              { x: 65, y: 120, w: 135, h: 60, r: 999, label: "شهيق", className: "decor" },
+              { x: 710, y: 135, w: 95, h: 52, r: 999, label: "إلى الأذين الأيسر", className: "decor" }
+            ]
+          };
+        }
+      },
+      {
+        id: "left-heart",
+        title: "المستوى 3: الأذين والبطين الأيسر",
+        place: "الأذين والبطين الأيسر",
+        mission: "ادخل الأذين الأيسر ثم البطين الأيسر واعبر الصمام الأبهري للخروج عبر الأورطي.",
+        objectiveTag: "هدفك: الاستعداد للضخ",
+        teaching: "الجانب الأيسر من القلب يضخ الدم المؤكسج بقوة عالية إلى الجسم عبر الشريان الأورطي.",
+        pressureTarget: 1,
+        pressureHint: "الضغط المطلوب: مرتفع قليلًا",
+        drain: 3.4,
+        start: { x: 100, y: 235 },
+        playerMode: "red",
+        checks: [
+          { id: "la", label: "ادخل الأذين الأيسر" },
+          { id: "lv", label: "انتقل إلى البطين الأيسر" },
+          { id: "exit", label: "اخرج عبر الأبهر" }
+        ],
+        quiz: {
+          title: "سؤال المرحلة 3",
+          text: "أي حجرة تضخ الدم المؤكسج بقوة إلى جميع أنحاء الجسم؟",
+          options: [
+            { text: "البطين الأيسر", correct: true },
+            { text: "الأذين الأيمن", correct: false },
+            { text: "البطين الأيمن", correct: false }
+          ]
+        },
+        build() {
+          return {
+            tracks: [
+              { x: 45, y: 195, w: 165, h: 110, r: 999, label: "أوردة رئوية", className: "red" },
+              { x: 205, y: 185, w: 210, h: 145, r: 999, label: "أذين أيسر", className: "red" },
+              { x: 320, y: 305, w: 240, h: 165, r: 999, label: "بطين أيسر", className: "red" },
+              { x: 515, y: 120, w: 250, h: 78, r: 28, label: "الأبهر", className: "red" },
+              { x: 760, y: 70, w: 105, h: 110, r: 999, label: "إلى الجسم", className: "red" }
+            ],
+            zones: [
+              { id: "la", x: 220, y: 200, w: 170, h: 115, r: 999, label: "أذين أيسر" },
+              { id: "lv", x: 350, y: 325, w: 170, h: 120, r: 999, label: "بطين أيسر" }
+            ],
+            gates: [
+              { id: "mitral", x: 365, y: 312, w: 95, h: 18, offset: 130, label: "ثنائي الشرفات" },
+              { id: "aortic", x: 520, y: 180, w: 18, h: 78, offset: 320, label: "الصمام الأبهري" }
+            ],
+            exits: [
+              { id: "exit", x: 770, y: 82, w: 88, h: 88, label: "الشريان الأورطي", requires: ["la", "lv"] }
+            ],
+            obstacles: [
+              { id: "chol1", type: "cholesterol", x: 628, y: 125, w: 54, h: 54, vx: 0, vy: 0, minX: 628, maxX: 628, minY: 125, maxY: 125, label: "كوليسترول" }
+            ],
+            targets: [],
+            collectibles: [],
+            decor: [
+              { x: 585, y: 35, w: 120, h: 48, r: 999, label: "ضغط أعلى", className: "decor" }
+            ]
+          };
+        }
+      },
+      {
+        id: "body",
+        title: "المستوى 4: أنحاء الجسم",
+        place: "أنحاء الجسم",
+        mission: "اختر العضو المطلوب ووصّل إليه الأكسجين مع تجنب الجراثيم والكوليسترول.",
+        objectiveTag: "هدفك: إيصال الأكسجين",
+        teaching: "بعد خروجه من القلب عبر الأبهر، يتوزع الدم المؤكسج على أعضاء الجسم مثل الدماغ والعضلات والأمعاء.",
+        pressureTarget: 0,
+        pressureHint: "الضغط المطلوب: متوازن",
+        drain: 4.8,
+        start: { x: 90, y: 255 },
+        playerMode: "red",
+        checks: [
+          { id: "organ", label: "أوصل الأكسجين إلى العضو الصحيح" }
+        ],
+        quiz: {
+          title: "سؤال المرحلة 4",
+          text: "لماذا تملك الأوردة صمامات أكثر من الشرايين؟",
+          options: [
+            { text: "لمنع رجوع الدم خاصة مع الضغط الأقل", correct: true },
+            { text: "لأن الدم فيها مؤكسج دائمًا", correct: false },
+            { text: "لأنها تضخ الدم أقوى من القلب", correct: false }
+          ]
+        },
+        build() {
+          const organs = ["brain", "muscle", "gut"];
+          const selected = organs[Math.floor(Math.random() * organs.length)];
+          return {
+            targetOrgan: selected,
+            tracks: [
+              { x: 35, y: 222, w: 210, h: 68, r: 28, label: "الأبهر", className: "red" },
+              { x: 225, y: 86, w: 95, h: 250, r: 28, label: "شريان صاعد", className: "red" },
+              { x: 225, y: 222, w: 430, h: 68, r: 28, label: "شريان رئيسي", className: "red" },
+              { x: 650, y: 135, w: 95, h: 110, r: 28, label: "إلى الدماغ", className: "red" },
+              { x: 640, y: 265, w: 130, h: 84, r: 28, label: "إلى العضلات", className: "red" },
+              { x: 620, y: 355, w: 150, h: 94, r: 28, label: "إلى الأمعاء", className: "red" }
+            ],
+            zones: [],
+            gates: [
+              { id: "veinValve", x: 470, y: 222, w: 18, h: 68, offset: 180, label: "صمام وريدي" }
+            ],
+            exits: [],
+            obstacles: [
+              { id: "g1", type: "germ", x: 350, y: 240, w: 44, h: 44, vx: 62, vy: 0, minX: 265, maxX: 590, minY: 240, maxY: 240, label: "جرثومة" },
+              { id: "g2", type: "germ", x: 675, y: 360, w: 40, h: 40, vx: 0, vy: -58, minX: 675, maxX: 675, minY: 290, maxY: 395, label: "جرثومة" },
+              { id: "chol2", type: "cholesterol", x: 560, y: 228, w: 50, h: 50, vx: 0, vy: 0, minX: 560, maxX: 560, minY: 228, maxY: 228, label: "كوليسترول" }
+            ],
+            targets: [
+              { id: "brain", x: 720, y: 75, w: 130, h: 82, label: "الدماغ" },
+              { id: "muscle", x: 735, y: 260, w: 130, h: 82, label: "العضلات" },
+              { id: "gut", x: 735, y: 372, w: 130, h: 82, label: "الأمعاء" }
+            ],
+            collectibles: [],
+            decor: [
+              { x: 35, y: 62, w: 145, h: 64, r: 18, label: "سلّم الأكسجين للعضو المضيء", className: "decor" }
+            ]
+          };
+        }
+      }
+    ];
+
+    const board = document.getElementById("board");
+    const boardWrap = document.getElementById("boardWrap");
+    const gameLayer = document.getElementById("gameLayer");
+    const playerEl = document.getElementById("player");
+    const fogEl = document.getElementById("fog");
+    const beatRing = document.getElementById("beatRing");
+    const overlay = document.getElementById("overlay");
+    const overlayTitle = document.getElementById("overlayTitle");
+    const overlayText = document.getElementById("overlayText");
+    const overlayFooter = document.getElementById("overlayFooter");
+    const overlayOptions = document.getElementById("overlayOptions");
+    const overlayActions = document.getElementById("overlayActions");
+    const overlayStartBtn = document.getElementById("overlayStartBtn");
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const adrenalineBtn = document.getElementById("adrenalineBtn");
+    const mobileAdrenalineBtn = document.getElementById("mobileAdrenalineBtn");
+    const raisePressureBtn = document.getElementById("raisePressureBtn");
+    const lowerPressureBtn = document.getElementById("lowerPressureBtn");
+    const levelValue = document.getElementById("levelValue");
+    const levelPlace = document.getElementById("levelPlace");
+    const oxygenValue = document.getElementById("oxygenValue");
+    const oxygenBar = document.getElementById("oxygenBar");
+    const pulseValue = document.getElementById("pulseValue");
+    const adrenalineText = document.getElementById("adrenalineText");
+    const pressureHint = document.getElementById("pressureHint");
+    const pressureExplain = document.getElementById("pressureExplain");
+    const scoreValue = document.getElementById("scoreValue");
+    const stageName = document.getElementById("stageName");
+    const stageMission = document.getElementById("stageMission");
+    const goalTag = document.getElementById("goalTag");
+    const checklist = document.getElementById("checklist");
+    const teachingText = document.getElementById("teachingText");
+    const statusText = document.getElementById("statusText");
+    const progressText = document.getElementById("progressText");
+    const messageEl = document.getElementById("message");
+    const heartBeatText = document.getElementById("heartBeatText");
+
+    const pressureSteps = [...document.querySelectorAll(".pressure-step")];
+    const audioState = { ctx: null, enabled: false };
+
+    const state = {
+      running: false,
+      paused: true,
+      lastTs: 0,
+      stageIndex: 0,
+      stageView: null,
+      oxygen: 70,
+      score: 0,
+      pressure: 0,
+      adrenaline: false,
+      pulse: 76,
+      player: { x: 0, y: 0, prevX: 0, prevY: 0 },
+      pointer: { x: 0, y: 0, active: false },
+      scale: 1,
+      offsetX: 0,
+      offsetY: 0,
+      playerColor: "blue",
+      visited: new Set(),
+      collected: 0,
+      collectedTotal: 0,
+      targetOrgan: "",
+      tickTimeout: null,
+      loopHandle: 0,
+      lastPenaltyTs: 0,
+      lastGateBeatTs: 0,
+      lastWrongPathTs: 0,
+      stageCompleted: false
+    };
+
+    function fmtPressure(level) {
+      if (level < 0) return "منخفض";
+      if (level > 0) return "مرتفع";
+      return "متوازن";
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function rectStyle(item) {
+      return [
+        "left:" + item.x + "px",
+        "top:" + item.y + "px",
+        "width:" + item.w + "px",
+        "height:" + item.h + "px",
+        "border-radius:" + (item.r || 18) + "px"
+      ].join(";");
+    }
+
+    function pointInRect(x, y, rect) {
+      return x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h;
+    }
+
+    function circleHitsRect(x, y, r, rect) {
+      const closestX = clamp(x, rect.x, rect.x + rect.w);
+      const closestY = clamp(y, rect.y, rect.y + rect.h);
+      const dx = x - closestX;
+      const dy = y - closestY;
+      return dx * dx + dy * dy < r * r;
+    }
+
+    function pulseCycle() {
+      return clamp(1500 - state.pulse * 8, 560, 980);
+    }
+
+    function gateCenter(gate) {
+      return { x: gate.x + gate.w / 2, y: gate.y + gate.h / 2 };
+    }
+
+    function gateIsOpen(gate) {
+      const center = gateCenter(gate);
+      const dist = Math.hypot(state.player.x - center.x, state.player.y - center.y);
+      return dist < Math.max(56, Math.max(gate.w, gate.h) * 1.2);
+    }
+
+    function layoutBoard() {
+      const rect = boardWrap.getBoundingClientRect();
+      const scale = Math.min(rect.width / BOARD_W, rect.height / BOARD_H);
+      state.scale = scale || 1;
+      state.offsetX = (rect.width - BOARD_W * state.scale) / 2;
+      state.offsetY = (rect.height - BOARD_H * state.scale) / 2;
+      gameLayer.style.transform = "translate(" + state.offsetX + "px," + state.offsetY + "px) scale(" + state.scale + ")";
+    }
+
+    function pointerToBoard(clientX, clientY) {
+      const rect = boardWrap.getBoundingClientRect();
+      return {
+        x: clamp((clientX - rect.left - state.offsetX) / state.scale, PLAYER_R, BOARD_W - PLAYER_R),
+        y: clamp((clientY - rect.top - state.offsetY) / state.scale, PLAYER_R, BOARD_H - PLAYER_R)
+      };
+    }
+
+    function updatePointerTarget(event) {
+      const next = pointerToBoard(event.clientX, event.clientY);
+      state.pointer.x = next.x;
+      state.pointer.y = next.y;
+      state.pointer.active = true;
+    }
+
+    function setMessage(text, tone = "") {
+      messageEl.textContent = text;
+      messageEl.className = "message" + (tone ? " " + tone : "");
+      statusText.textContent = text;
+    }
+
+    function buildChecklist(stageDef) {
+      const items = stageDef.checks.map((item) => {
+        let done = false;
+        if (item.id === "oxy") done = state.collected >= 6;
+        else if (item.id === "organ") done = state.stageCompleted;
+        else done = state.visited.has(item.id);
+        return '<div class="check">' + (done ? "✅ " : "⬜ ") + item.label + "</div>";
+      });
+      checklist.innerHTML = items.join("");
+    }
+
+    function progressPercent(stageDef) {
+      const total = stageDef.checks.length;
+      let done = 0;
+      stageDef.checks.forEach((item) => {
+        if (item.id === "oxy" && state.collected >= 6) done += 1;
+        else if (item.id === "organ" && state.stageCompleted) done += 1;
+        else if (state.visited.has(item.id)) done += 1;
+      });
+      return Math.round((done / total) * 100);
+    }
+
+    function renderBoard() {
+      const stageDef = stageDefinitions[state.stageIndex];
+      const view = state.stageView;
+      const html = [];
+      view.tracks.forEach((track) => {
+        html.push(
+          '<div class="track ' + (track.className || "") + '" style="' + rectStyle(track) + '">' + track.label + "</div>"
+        );
+      });
+      view.decor.forEach((item) => {
+        html.push('<div class="decor" style="' + rectStyle(item) + '">' + item.label + "</div>");
+      });
+      view.zones.forEach((zone) => {
+        const visited = state.visited.has(zone.id) ? " visited" : "";
+        html.push(
+          '<div class="zone' + visited + '" data-zone="' + zone.id + '" style="' + rectStyle(zone) + '">' + zone.label + "</div>"
+        );
+      });
+      view.gates.forEach((gate) => {
+        const open = gateIsOpen(gate) ? " open" : "";
+        html.push(
+          '<div class="gate' + open + '" data-gate="' + gate.id + '" style="' + rectStyle(gate) + '"><div class="gate-label">' + gate.label + "</div></div>"
+        );
+      });
+      view.collectibles.forEach((orb) => {
+        if (!orb.collected) {
+          html.push(
+            '<div class="collectible" data-collectible="' + orb.id + '" style="' + rectStyle(orb) + '">' + orb.label + "</div>"
+          );
+        }
+      });
+      view.targets.forEach((target) => {
+        const active = target.id === state.targetOrgan ? " active" : "";
+        html.push(
+          '<div class="target' + active + '" data-target="' + target.id + '" style="' + rectStyle(target) + '">' + target.label + "</div>"
+        );
+      });
+      view.exits.forEach((exit) => {
+        const ready = exitReady(exit) ? " ready" : "";
+        html.push(
+          '<div class="exit' + ready + '" data-exit="' + exit.id + '" style="' + rectStyle(exit) + '">' + exit.label + "</div>"
+        );
+      });
+      view.obstacles.forEach((obstacle) => {
+        html.push(
+          '<div class="obstacle ' + obstacle.type + '" data-obstacle="' + obstacle.id + '" style="' + rectStyle(obstacle) + '">' + obstacle.label + "</div>"
+        );
+      });
+      board.innerHTML = html.join("");
+
+      if (stageDef.id === "body" && state.targetOrgan) {
+        const organText = {
+          brain: "الهدف الحالي: أوصل الأكسجين إلى الدماغ.",
+          muscle: "الهدف الحالي: أوصل الأكسجين إلى العضلات.",
+          gut: "الهدف الحالي: أوصل الأكسجين إلى الأمعاء."
+        };
+        goalTag.textContent = organText[state.targetOrgan];
+      }
+    }
+
+    function updatePlayerEl() {
+      playerEl.style.left = state.player.x + "px";
+      playerEl.style.top = state.player.y + "px";
+      playerEl.classList.toggle("blue", state.playerColor === "blue");
+    }
+
+    function exitReady(exit) {
+      if (exit.requires) return exit.requires.every((key) => state.visited.has(key));
+      if (exit.requiresCollectibles) return state.collected >= exit.requiresCollectibles;
+      return true;
+    }
+
+    function initStage(index) {
+      state.stageIndex = index;
+      state.stageView = stageDefinitions[index].build();
+      state.visited = new Set();
+      state.collected = 0;
+      state.collectedTotal = state.stageView.collectibles.length;
+      state.targetOrgan = state.stageView.targetOrgan || "";
+      state.stageCompleted = false;
+      state.player.x = stageDefinitions[index].start.x;
+      state.player.y = stageDefinitions[index].start.y;
+      state.player.prevX = state.player.x;
+      state.player.prevY = state.player.y;
+      state.pointer.x = state.player.x;
+      state.pointer.y = state.player.y;
+      state.pointer.active = false;
+      state.playerColor = stageDefinitions[index].playerMode;
+      state.pressure = stageDefinitions[index].pressureTarget;
+      state.pulse = 76 + (state.adrenaline ? 28 : 0) + state.pressure * 8;
+      renderBoard();
+      updatePlayerEl();
+      updateUI();
+      buildChecklist(stageDefinitions[index]);
+      setMessage(stageDefinitions[index].mission);
+    }
+
+    function updateUI() {
+      const stageDef = stageDefinitions[state.stageIndex];
+      const bodyGoalText = {
+        brain: "الهدف الحالي: أوصل الأكسجين إلى الدماغ.",
+        muscle: "الهدف الحالي: أوصل الأكسجين إلى العضلات.",
+        gut: "الهدف الحالي: أوصل الأكسجين إلى الأمعاء."
+      };
+      levelValue.textContent = (state.stageIndex + 1) + " / " + stageDefinitions.length;
+      levelPlace.textContent = stageDef.place;
+      stageName.textContent = stageDef.title;
+      stageMission.textContent = stageDef.mission;
+      goalTag.textContent = stageDef.id === "body" && state.targetOrgan ? bodyGoalText[state.targetOrgan] : stageDef.objectiveTag;
+      teachingText.textContent = stageDef.teaching;
+      pressureHint.textContent = stageDef.pressureHint;
+      scoreValue.textContent = state.score;
+      oxygenValue.textContent = Math.round(state.oxygen) + "%";
+      oxygenBar.style.width = clamp(state.oxygen, 0, 100) + "%";
+      oxygenBar.style.background = state.oxygen > 55
+        ? "linear-gradient(90deg, #22c55e, #3b82f6)"
+        : state.oxygen > 25
+          ? "linear-gradient(90deg, #f59e0b, #f97316)"
+          : "linear-gradient(90deg, #ef4444, #b91c1c)";
+      pulseValue.textContent = state.pulse;
+      adrenalineText.textContent = state.adrenaline ? "وضع أدرينالين" : "وضع طبيعي";
+      pressureExplain.textContent = "الضغط الحالي: " + fmtPressure(state.pressure) + ". " + stageDef.pressureHint.replace("الضغط المطلوب: ", "المطلوب ");
+      fogEl.style.opacity = ((100 - clamp(state.oxygen, 0, 100)) / 100 * 0.7 + 0.04).toFixed(2);
+      progressText.textContent = "الإنجاز: " + progressPercent(stageDef) + "%";
+      pressureSteps.forEach((step) => {
+        step.classList.toggle("active", Number(step.dataset.pressure) === state.pressure);
+      });
+      adrenalineBtn.classList.toggle("active", state.adrenaline);
+      mobileAdrenalineBtn.classList.toggle("active", state.adrenaline);
+      buildChecklist(stageDef);
+    }
+
+    function updatePulse() {
+      state.pulse = clamp(76 + (state.adrenaline ? 28 : 0) + state.pressure * 8, 58, 126);
+    }
+
+    function adjustPressure(delta) {
+      state.pressure = clamp(state.pressure + delta, -1, 1);
+      updatePulse();
+      updateUI();
+    }
+
+    function toggleAdrenaline() {
+      state.adrenaline = !state.adrenaline;
+      updatePulse();
+      updateUI();
+      setMessage(state.adrenaline ? "تم تفعيل الأدرينالين: النبض أسرع والتحكم أصعب." : "تم إلغاء الأدرينالين.", state.adrenaline ? "warn" : "");
+      startHeartbeatLoop();
+    }
+
+    function showOverlay(config) {
+      overlay.classList.add("show");
+      overlayTitle.textContent = config.title;
+      if (config.html) {
+        overlayText.innerHTML = config.html;
+      } else {
+        overlayText.textContent = config.text || "";
+      }
+      overlayFooter.textContent = config.footer || "";
+      overlayFooter.style.display = config.footer ? "block" : "none";
+      overlayOptions.innerHTML = "";
+      overlayActions.innerHTML = "";
+      if (config.options && config.options.length) {
+        config.options.forEach((option) => {
+          const btn = document.createElement("button");
+          btn.className = "option";
+          btn.textContent = option.text;
+          btn.addEventListener("click", option.onClick);
+          overlayOptions.appendChild(btn);
+        });
+      }
+      (config.actions || []).forEach((action) => {
+        const btn = document.createElement("button");
+        btn.className = action.className || "btn";
+        btn.textContent = action.text;
+        btn.addEventListener("click", action.onClick);
+        overlayActions.appendChild(btn);
+      });
+    }
+
+    function hideOverlay() {
+      overlay.classList.remove("show");
+    }
+
+    function flashPlayerOxygenation() {
+      playerEl.classList.remove("flash-oxygen");
+      void playerEl.offsetWidth;
+      playerEl.classList.add("flash-oxygen");
+    }
+
+    function flashWrongWay() {
+      boardWrap.classList.remove("wrong-way");
+      void boardWrap.offsetWidth;
+      boardWrap.classList.add("wrong-way");
+    }
+
+    function beep(freq, duration, type, volume) {
+      if (!audioState.enabled) return;
+      try {
+        if (!audioState.ctx) audioState.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = audioState.ctx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || "sine";
+        osc.frequency.value = freq;
+        gain.gain.value = volume || 0.05;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        setTimeout(() => osc.stop(), duration * 1000);
+      } catch (err) {
+      }
+    }
+
+    function triggerBeatAnimation() {
+      beatRing.classList.remove("active");
+      void beatRing.offsetWidth;
+      beatRing.classList.add("active");
+      heartBeatText.textContent = "LUB";
+      setTimeout(() => {
+        heartBeatText.textContent = "DUB";
+      }, 130);
+      setTimeout(() => {
+        heartBeatText.textContent = "LUB-DUB";
+      }, 290);
+    }
+
+    function startHeartbeatLoop() {
+      clearTimeout(state.tickTimeout);
+      if (!state.running || state.paused) return;
+      const cycle = pulseCycle();
+      triggerBeatAnimation();
+      beep(132, 0.06, "triangle", 0.05);
+      setTimeout(() => beep(96, 0.05, "triangle", 0.04), 120);
+      state.tickTimeout = setTimeout(startHeartbeatLoop, cycle);
+    }
+
+    function launchGame() {
+      audioState.enabled = true;
+      state.running = true;
+      state.paused = false;
+      state.lastTs = performance.now();
+      state.score = 0;
+      state.oxygen = 70;
+      state.adrenaline = false;
+      initStage(0);
+      hideOverlay();
+      layoutBoard();
+      startHeartbeatLoop();
+      cancelAnimationFrame(state.loopHandle);
+      state.loopHandle = requestAnimationFrame(loop);
+    }
+
+    function restartGame() {
+      launchGame();
+    }
+
+    function updateObstacles(dt) {
+      const view = state.stageView;
+      view.obstacles.forEach((obstacle) => {
+        obstacle.x += obstacle.vx * dt;
+        obstacle.y += obstacle.vy * dt;
+        if (obstacle.vx !== 0 && (obstacle.x <= obstacle.minX || obstacle.x >= obstacle.maxX)) obstacle.vx *= -1;
+        if (obstacle.vy !== 0 && (obstacle.y <= obstacle.minY || obstacle.y >= obstacle.maxY)) obstacle.vy *= -1;
+      });
+    }
+
+    function syncDynamicElements() {
+      state.stageView.obstacles.forEach((obstacle) => {
+        const el = board.querySelector('[data-obstacle="' + obstacle.id + '"]');
+        if (!el) return;
+        el.style.left = obstacle.x + "px";
+        el.style.top = obstacle.y + "px";
+      });
+      state.stageView.gates.forEach((gate) => {
+        const el = board.querySelector('[data-gate="' + gate.id + '"]');
+        if (!el) return;
+        el.classList.toggle("open", gateIsOpen(gate));
+      });
+      state.stageView.exits.forEach((exit) => {
+        const el = board.querySelector('[data-exit="' + exit.id + '"]');
+        if (!el) return;
+        el.classList.toggle("ready", exitReady(exit));
+      });
+    }
+
+    function penalize(amount, text) {
+      const now = performance.now();
+      if (now - state.lastPenaltyTs < 350) return;
+      state.lastPenaltyTs = now;
+      state.oxygen = clamp(state.oxygen - amount, 0, 100);
+      setMessage(text, "warn");
+      updateUI();
+    }
+
+    function wrongPathPenalty(amount, text) {
+      const now = performance.now();
+      if (now - state.lastWrongPathTs < 900) return;
+      state.lastWrongPathTs = now;
+      flashWrongWay();
+      state.oxygen = clamp(state.oxygen - amount, 0, 100);
+      setMessage(text, "warn");
+      updateUI();
+      if (state.oxygen <= 0) {
+        loseGame("Game Over", "اخترت مسارًا خاطئًا في أنحاء الجسم، فانخفض الأكسجين بشدة قبل الوصول إلى العضو المطلوب.");
+      }
+    }
+
+    function handleGatePasses() {
+      state.stageView.gates.forEach((gate) => {
+        const touching = circleHitsRect(state.player.x, state.player.y, PLAYER_R + 4, gate);
+        if (touching && gateIsOpen(gate) && !gate._passed) {
+          gate._passed = true;
+          const now = performance.now();
+          if (now - state.lastGateBeatTs > 180) {
+            state.lastGateBeatTs = now;
+            beep(148, 0.045, "triangle", 0.04);
+          }
+        } else if (!touching) {
+          gate._passed = false;
+        }
+      });
+    }
+
+    function triggerOxygenation() {
+      if (state.playerColor === "red") return;
+      state.playerColor = "red";
+      state.oxygen = clamp(state.oxygen + 12, 0, 100);
+      state.score += 18;
+      state.visited.add("oxygenated");
+      flashPlayerOxygenation();
+      beep(420, 0.06, "sine", 0.05);
+      setMessage("تمت الأكسجة بنجاح!", "ok");
+      updateUI();
+    }
+
+    function handleZonesAndGoals() {
+      const view = state.stageView;
+
+      view.zones.forEach((zone) => {
+        if (!state.visited.has(zone.id) && pointInRect(state.player.x, state.player.y, zone)) {
+          state.visited.add(zone.id);
+          state.score += 15;
+          setMessage("أحسنت، وصلت إلى " + zone.label + ".", "ok");
+          renderBoard();
+          updateUI();
+        }
+      });
+
+      if (stageDefinitions[state.stageIndex].id === "lungs") {
+        const oxygenTrack = view.tracks[1];
+        if (oxygenTrack && pointInRect(state.player.x, state.player.y, oxygenTrack)) {
+          triggerOxygenation();
+        }
+        view.collectibles.forEach((orb) => {
+          if (!orb.collected && circleHitsRect(state.player.x, state.player.y, PLAYER_R, orb)) {
+            orb.collected = true;
+            state.collected += 1;
+            state.score += 12;
+            state.oxygen = clamp(state.oxygen + 8, 0, 100);
+            const justOxygenated = state.playerColor !== "red";
+            if (justOxygenated) {
+              triggerOxygenation();
+            } else {
+              setMessage("التقطت كرة أكسجين. المجموع: " + state.collected + " / 6", "ok");
+            }
+            renderBoard();
+            updateUI();
+          }
+        });
+        if (state.collected >= 6) {
+          state.visited.add("oxy");
+        }
+      }
+
+      if (stageDefinitions[state.stageIndex].id === "body") {
+        view.targets.forEach((target) => {
+          if (!pointInRect(state.player.x, state.player.y, target)) return;
+          if (target.id === state.targetOrgan) {
+            state.visited.add("organ");
+            completeStage();
+          } else {
+            wrongPathPenalty(28, "هذا مسار خاطئ ولا يوصلك إلى العضو المطلوب. ابحث عن العضو المضيء فورًا.");
+          }
+        });
+      }
+
+      view.exits.forEach((exit) => {
+        if (!pointInRect(state.player.x, state.player.y, exit)) return;
+        if (exitReady(exit)) {
+          state.visited.add(exit.id);
+          completeStage();
+        } else if (exit.requiresCollectibles) {
+          setMessage("تحتاج إلى جمع كل كرات الأكسجين قبل العودة.", "warn");
+        } else {
+          setMessage("ما زلت تحتاج إلى المرور بالمناطق المطلوبة أولاً.", "warn");
+        }
+      });
+    }
+
+    function handleObstacleCollisions() {
+      state.stageView.obstacles.forEach((obstacle) => {
+        if (circleHitsRect(state.player.x, state.player.y, PLAYER_R, obstacle)) {
+          state.player.x = state.player.prevX;
+          state.player.y = state.player.prevY;
+          if (obstacle.type === "cholesterol") {
+            penalize(6, "كتلة كوليسترول ضيّقت الممر وأبطأتك.");
+          } else if (obstacle.type === "co2") {
+            penalize(5, "ابتعد عن ثاني أكسيد الكربون والتقط الأكسجين.");
+          } else {
+            penalize(5, "جرثومة في الطريق. انتظر أو تحرّك بحذر.");
+          }
+        }
+      });
+    }
+
+    function movePlayer(dt) {
+      state.player.prevX = state.player.x;
+      state.player.prevY = state.player.y;
+      const targetX = state.pointer.active ? state.pointer.x : state.player.x;
+      const targetY = state.pointer.active ? state.pointer.y : state.player.y;
+      const dx = targetX - state.player.x;
+      const dy = targetY - state.player.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < .2) return;
+      let speed = 195 + (state.pressure + 1) * 20 + (state.adrenaline ? 60 : 0);
+      if (state.pressure < stageDefinitions[state.stageIndex].pressureTarget) speed -= 8;
+      const step = Math.min(dist, speed * dt);
+      state.player.x = clamp(state.player.x + dx / dist * step, PLAYER_R, BOARD_W - PLAYER_R);
+      state.player.y = clamp(state.player.y + dy / dist * step, PLAYER_R, BOARD_H - PLAYER_R);
+    }
+
+    function applyDrain(dt) {
+      const stageDef = stageDefinitions[state.stageIndex];
+      let drain = stageDef.drain * (state.adrenaline ? 1 : 0.5);
+      if (state.adrenaline) drain += 2.1;
+      if (state.pressure !== stageDef.pressureTarget) drain += 1.8;
+      if (stageDef.id === "body" && state.pressure < 0) drain += 1.2;
+      state.oxygen = clamp(state.oxygen - drain * dt, 0, 100);
+    }
+
+    function completeStage() {
+      if (state.stageCompleted) return;
+      state.stageCompleted = true;
+      state.paused = true;
+      state.score += 35;
+      updateUI();
+      clearTimeout(state.tickTimeout);
+
+      if (state.stageIndex === stageDefinitions.length - 1) {
+        showOverlay({
+          title: "فوائد اللعبة",
+          html: `
+            <ul class="benefits-list">
+              <li>وصول الأكسجين إلى الدماغ يساعد على التركيز وسلامة عمل الجهاز العصبي.</li>
+              <li>وصول الأكسجين إلى العضلات يمنح الجسم طاقة للحركة والجهد والنشاط.</li>
+              <li>وصول الأكسجين إلى الأمعاء يدعم الهضم وامتصاص الغذاء واستمرار عمل الجسم.</li>
+              <li>الكوليسترول قد يضيّق الشرايين ويعرقل تدفق الدم، لذلك ظهر في اللعبة كعائق مهم.</li>
+              <li>الجراثيم تذكّر بأن أي عائق داخل الأوعية قد يؤثر في وصول الدم والأكسجين للأعضاء.</li>
+            </ul>
+          `,
+          footer: "عمل طالبات 2/2",
+          actions: [
+            {
+              text: "إعادة المحاولة",
+              className: "btn",
+              onClick: () => restartGame()
+            }
+          ]
+        });
+        return;
+      }
+
+      const quiz = stageDefinitions[state.stageIndex].quiz;
+      showOverlay({
+        title: quiz.title,
+        text: quiz.text,
+        options: quiz.options.map((item) => ({
+          text: item.text,
+          onClick: () => {
+            if (item.correct) {
+              state.score += 20;
+              state.oxygen = clamp(state.oxygen + 6, 0, 100);
+              setMessage("إجابة صحيحة! انتقل الآن إلى المرحلة التالية.", "ok");
+              hideOverlay();
+              state.paused = false;
+              initStage(state.stageIndex + 1);
+              startHeartbeatLoop();
+              return;
+            }
+            hideOverlay();
+            loseGame("Game Over", "اخترت إجابة خاطئة في السؤال التعليمي، لذلك انتهت المحاولة مباشرة.");
+          }
+        }))
+      });
+    }
+
+    function loseGame(title, text) {
+      state.running = false;
+      state.paused = true;
+      clearTimeout(state.tickTimeout);
+      cancelAnimationFrame(state.loopHandle);
+      showOverlay({
+        title: title || "انخفض الأكسجين",
+        text: text || "تأخرت كثيرًا أو اصطدمت بعوائق وصمامات مغلقة حتى هبط الأكسجين في الجسم. أعد المحاولة ومرّ بالتوقيت الصحيح.",
+        actions: [
+          {
+            text: "أعد المحاولة",
+            className: "btn",
+            onClick: () => restartGame()
+          }
+        ]
+      });
+    }
+
+    function loop(ts) {
+      if (!state.running) return;
+      const dt = Math.min(0.033, (ts - state.lastTs) / 1000 || 0.016);
+      state.lastTs = ts;
+
+      if (!state.paused) {
+        updateObstacles(dt);
+        movePlayer(dt);
+        handleGatePasses();
+        handleObstacleCollisions();
+        handleZonesAndGoals();
+        applyDrain(dt);
+        syncDynamicElements();
+        updatePlayerEl();
+        updateUI();
+        if (state.oxygen <= 0) {
+          loseGame();
+          return;
+        }
+      }
+
+      state.loopHandle = requestAnimationFrame(loop);
+    }
+
+    boardWrap.addEventListener("pointerdown", (event) => {
+      updatePointerTarget(event);
+      boardWrap.setPointerCapture(event.pointerId);
+    });
+    boardWrap.addEventListener("pointermove", (event) => {
+      if (event.pointerType === "mouse" || event.buttons > 0) {
+        updatePointerTarget(event);
+      }
+    });
+    boardWrap.addEventListener("pointerup", () => {
+      state.pointer.active = false;
+    });
+    boardWrap.addEventListener("pointercancel", () => {
+      state.pointer.active = false;
+    });
+    boardWrap.addEventListener("pointerleave", (event) => {
+      if (event.pointerType !== "mouse") state.pointer.active = false;
+    });
+
+    window.addEventListener("resize", layoutBoard);
+
+    overlayStartBtn.addEventListener("click", launchGame);
+    startBtn.addEventListener("click", launchGame);
+    restartBtn.addEventListener("click", restartGame);
+    adrenalineBtn.addEventListener("click", toggleAdrenaline);
+    mobileAdrenalineBtn.addEventListener("click", toggleAdrenaline);
+    raisePressureBtn.addEventListener("click", () => adjustPressure(1));
+    lowerPressureBtn.addEventListener("click", () => adjustPressure(-1));
+
+    initStage(0);
+    layoutBoard();
+    setMessage("ابدأ اللعبة لتبدأ رحلة الدم من الجانب الأيمن للقلب.");
+    updateUI();
+  </script>
+</body>
+</html>
